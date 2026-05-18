@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Cyclone DDS config pre single-machine ROS 2 setup (Hesai LiDAR + Basler kamera).
+  Odporucane hodnotami Stereolabs DDS tuning guide.
+
+  Pred spustenim musi byt nastaveny kernel buffer:
+    sudo sysctl -w net.core.rmem_max=2147483647
+  alebo trvalo cez: system/60-ros2-buffers.conf
+
+  Interface selekcia:
+  - autodetermine=true  : Automaticky detekuje dostupne networky
+  - Bez <NetworkInterface>: Pouzi vsetky dostupne interfaces
+  - S <NetworkInterface>: Explicitne vyvol interfaces
+-->
+<CycloneDDS
+  xmlns="https://cdds.io/config"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="https://cdds.io/config
+    https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+
+  <Domain id="any">
+    <General>
+      <!-- Detekcia dostupnych network interfaces (bez hardcoded loopback) -->
+      <!-- Pokial nie je explicitne definovany interface, CycloneDDS detekuje vsetky -->
+      <AllowMulticast>true</AllowMulticast>
+      <!-- Tesne pod UDP limit – predchádza kernel fragmentácii -->
+      <MaxMessageSize>65500B</MaxMessageSize>
+    </General>
+
+    <Internal>
+      <!-- Minimalna OS receive buffer size; kernel rmem_max musi byt >= tato hodnota -->
+      <SocketReceiveBufferSize min="10MB"/>
+      <!-- WHC high watermark: obmedzuje mnozstvo dat v pamati writera pri pomalom
+           subscriberovi. Stereolabs odporucana hodnota. -->
+      <Watermarks>
+        <WhcHigh>500kB</WhcHigh>
+      </Watermarks>
+    </Internal>
+
+    <Tracing>
+      <!-- Vypise iba aktivnu konfiguraciu pri starte, nie realtime logy -->
+      <Verbosity>config</Verbosity>
+      <OutputFile>stderr</OutputFile>
+    </Tracing>
+  </Domain>
+
+</CycloneDDS>
