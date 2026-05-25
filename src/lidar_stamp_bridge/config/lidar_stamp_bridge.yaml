@@ -1,25 +1,5 @@
 lidar_stamp_bridge_node:
   ros__parameters:
-    # Topic na ktory sa subscribuje (musi sediet s Hesai ros_send_point_cloud_topic)
-    topic: /lidar_points
-
-    # Zdielana pamat pre stamp bridge (cita basler_ext_trigger_cpp matchovaci node)
-    mmap_path: /dev/shm/lidar_stamp.bin
-    mmap_slots: 128
-
-    # CSV log – zapisuje sa do Matching adresaru
-    csv_path: "/home/jetson/ROS2-Camera-Sync-dominik/Matching/lidar_stamp_log.csv"
-
-    # --- QoS nastavenia ---------------------------------------------------
-    # sensor_data_qos: true  => pouzije rclcpp::SensorDataQoS() (best-effort, depth 5)
-    #                           Pouzit iba ak Hesai driver publikuje best-effort a
-    #                           nechces menit jeho QoS.
-    # sensor_data_qos: false => pouzije KeepLast(queue_depth) + reliability
-    sensor_data_qos: false
-
-    # Hlbka fronty (pocet sprav). 25 pokryje ~2.5 s pri 10 Hz bez straty.
-    queue_depth: 25
-
-    # "reliable" = subscriber caka na dorucenie, DDS zaruci dodanie
-    # "best_effort" = rychlejsie, ale moze dropovat framey pri zatazi
-    reliability: reliable
+    topic: "/lidar_points"
+    mmap_path: "/dev/shm/lidar_stamp.bin"
+    mmap_slots: 512

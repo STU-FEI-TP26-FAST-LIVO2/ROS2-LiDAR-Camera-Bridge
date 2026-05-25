@@ -1,11 +1,10 @@
-  GNU nano 6.2                       .gitignore                                 
 build/
 install/
 log/
 .vscode/
 .idea/
+*.bag
+*.db3
+*.log
 *.pyc
 __pycache__/
-
-
-

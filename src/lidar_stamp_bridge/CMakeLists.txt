@@ -18,11 +18,13 @@ install(TARGETS lidar_stamp_bridge_node
 )
 
 install(DIRECTORY include/
-  DESTINATION include/
+  DESTINATION include
 )
 
 install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
+
+ament_export_include_directories(include)
 
 ament_package()
