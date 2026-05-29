@@ -29,7 +29,7 @@ Nainštalované súbory:
 sudo apt install ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
 ```
 
-## Zostavenie
+## Kompilácia
 
 ```bash
 cd ROS2-LIDAR-CAMERA-BRIDGE
@@ -98,7 +98,7 @@ Subscription používa reliable QoS s hĺbkou frontu 25.
 
 Node vytvorí alebo zmení veľkosť mmap súboru na `mmap_path`. Súbor obsahuje:
 
-- header s magic hodnotou `LSYN`, verziou `1`, kapacitou, veľkosťou záznamu a `write_index`
+- header s parametrom `LSYN`, verziou `1`, kapacitou, veľkosťou záznamu a `write_index`
 - záznamy ring buffera s:
   - validity flags
   - LiDAR ROS header timestamp v nanosekundách
