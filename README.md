@@ -1,35 +1,35 @@
 # ROS 2 LiDAR Timestamp Bridge
 
-This workspace contains a small ROS 2 package that forwards LiDAR message timestamps to shared memory for the camera synchronization workspace.
+Tento workspace obsahuje malý ROS 2 balík, ktorý posiela časové značky LiDAR správ do zdieľanej pamäte pre workspace synchronizácie kamery.
 
-The `lidar_stamp_bridge_node` subscribes to `/lidar_points`, reads `msg->header.stamp` from each `sensor_msgs/msg/PointCloud2` message, and writes the timestamp plus receive metadata into `/dev/shm/lidar_stamp.bin`. The camera node in `ROS2-Camera-Sync-dominik` reads this mmap file and performs the actual camera-to-LiDAR timestamp matching.
+`lidar_stamp_bridge_node` sa prihlási na odber `/lidar_points`, z každej správy `sensor_msgs/msg/PointCloud2` číta `msg->header.stamp` a zapisuje časovú značku spolu s metadátami prijatia do `/dev/shm/lidar_stamp.bin`. Kamerový node v `ROS2-Camera-Sync-dominik` číta tento mmap súbor a vykonáva samotné párovanie časových značiek medzi kamerou a LiDARom.
 
-This bridge does not match camera frames with LiDAR frames. It only prepares recent LiDAR timestamps for the camera workspace.
+Tento bridge nepáruje snímky z kamery so snímkami z LiDARu. Iba pripravuje posledné LiDAR časové značky pre kamerový workspace.
 
-## Package
+## Balík
 
 ```text
 src/lidar_stamp_bridge
 ```
 
-Installed files:
+Nainštalované súbory:
 
-- executable: `lidar_stamp_bridge_node`
-- launch file: `lidar_stamp_bridge.launch.py`
-- config files: `lidar_stamp_bridge.yaml`, `cyclonedds.xml`
+- spustiteľný súbor: `lidar_stamp_bridge_node`
+- launch súbor: `lidar_stamp_bridge.launch.py`
+- konfiguračné súbory: `lidar_stamp_bridge.yaml`, `cyclonedds.xml`
 
-## Requirements
+## Požiadavky
 
-- ROS 2 with `ament_cmake`
+- ROS 2 s `ament_cmake`
 - `rclcpp`
 - `sensor_msgs`
-- Cyclone DDS runtime when using the provided launch file:
+- Cyclone DDS runtime pri použití dodaného launch súboru:
 
 ```bash
 sudo apt install ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
 ```
 
-## Build
+## Zostavenie
 
 ```bash
 cd ROS2-LIDAR-CAMERA-BRIDGE
@@ -37,21 +37,21 @@ colcon build
 source install/setup.bash
 ```
 
-If large LiDAR clouds are dropped or Cyclone DDS reports a small receive buffer, increase the kernel receive buffer before running:
+Ak sa veľké LiDAR point cloudy zahadzujú alebo Cyclone DDS hlási malý prijímací buffer, pred spustením zväčši kernel receive buffer:
 
 ```bash
 sudo sysctl -w net.core.rmem_max=2147483647
 ```
 
-## Run Directly
+## Priame spustenie
 
-Direct `ros2 run` does not load the launch-file DDS environment. If the LiDAR publisher also uses Cyclone DDS, source the helper script first:
+Priame `ros2 run` nenačíta DDS prostredie z launch súboru. Ak LiDAR publisher tiež používa Cyclone DDS, najprv sourcni pomocný skript:
 
 ```bash
 source src/lidar_stamp_bridge/scripts/source_cyclone_env.sh
 ```
 
-Then start the node:
+Potom spusti node:
 
 ```bash
 ros2 run lidar_stamp_bridge lidar_stamp_bridge_node --ros-args \
@@ -59,26 +59,26 @@ ros2 run lidar_stamp_bridge lidar_stamp_bridge_node --ros-args \
   -p mmap_path:=/dev/shm/lidar_stamp.bin
 ```
 
-## Run With Launch
+## Spustenie cez launch
 
 ```bash
 ros2 launch lidar_stamp_bridge lidar_stamp_bridge.launch.py
 ```
 
-The launch file loads the parameters from:
+Launch súbor načíta parametre z:
 
 ```text
 src/lidar_stamp_bridge/config/lidar_stamp_bridge.yaml
 ```
 
-It also sets:
+Zároveň nastaví:
 
 ```text
 RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 CYCLONEDDS_URI=file://<installed-package-share>/config/cyclonedds.xml
 ```
 
-## Parameters
+## Parametre
 
 ```yaml
 lidar_stamp_bridge_node:
@@ -88,37 +88,37 @@ lidar_stamp_bridge_node:
     mmap_slots: 512
 ```
 
-- `topic`: PointCloud2 topic to subscribe to.
-- `mmap_path`: shared memory file written by this bridge and read by the camera node.
-- `mmap_slots`: number of timestamp records kept in the shared memory ring buffer.
+- `topic`: PointCloud2 topic, na ktorý sa node prihlási na odber.
+- `mmap_path`: súbor v zdieľanej pamäti, do ktorého tento bridge zapisuje a z ktorého kamerový node číta.
+- `mmap_slots`: počet záznamov časových značiek uložených v ring bufferi zdieľanej pamäte.
 
-The subscription uses reliable QoS with a queue depth of 25.
+Subscription používa reliable QoS s hĺbkou frontu 25.
 
-## Shared Memory Data
+## Dáta v zdieľanej pamäti
 
-The node creates or resizes the mmap file at `mmap_path`. The file contains:
+Node vytvorí alebo zmení veľkosť mmap súboru na `mmap_path`. Súbor obsahuje:
 
-- header with magic `LSYN`, version `1`, capacity, record size, and `write_index`
-- ring-buffer records with:
+- header s magic hodnotou `LSYN`, verziou `1`, kapacitou, veľkosťou záznamu a `write_index`
+- záznamy ring buffera s:
   - validity flags
-  - LiDAR ROS header timestamp in nanoseconds
-  - host receive timestamp in nanoseconds
-  - local LiDAR sequence number
+  - LiDAR ROS header timestamp v nanosekundách
+  - host receive timestamp v nanosekundách
+  - lokálne poradové číslo LiDARu
   - `frame_id`
 
-If the existing mmap header does not match the expected format or configured capacity, the file is cleared and reinitialized.
+Ak existujúci mmap header nezodpovedá očakávanému formátu alebo nakonfigurovanej kapacite, súbor sa vymaže a znovu inicializuje.
 
-## Verify
+## Overenie
 
-Check that LiDAR messages are arriving:
+Skontroluj, či prichádzajú LiDAR správy:
 
 ```bash
 ros2 topic hz /lidar_points
 ```
 
-Start the bridge and watch its log. Every received cloud should produce a line with `lidar_seq`, `ros_header_ns`, `host_ns`, and `frame_id`.
+Spusti bridge a sleduj jeho log. Každý prijatý point cloud by mal vytvoriť riadok s `lidar_seq`, `ros_header_ns`, `host_ns` a `frame_id`.
 
-You can also check that the mmap file exists:
+Môžeš tiež skontrolovať, či mmap súbor existuje:
 
 ```bash
 ls -lh /dev/shm/lidar_stamp.bin
